@@ -75,9 +75,10 @@ export default function EditorPage() {
   const userName = searchParams.get("name") || session?.user?.name || "Anonymous"
 
   const [languageSelectorOpen, setLanguageSelectorOpen] = useState<boolean>(false)
+  const [selectedLanguage, setSelectedLanguage] = useState("javascript")
+
   const [socket, setSocket] = useState<Socket | null>(null)
   const [code, setCode] = useState<string>("// Start coding here...")
-  const [language, setLanguage] = useState<string>("javascript")
   const [users, setUsers] = useState<UserInfo[]>([])
   const [isConnected, setIsConnected] = useState<boolean>(false)
   const [isEditorReady, setIsEditorReady] = useState<boolean>(false)
@@ -136,8 +137,9 @@ export default function EditorPage() {
     })
 
     newSocket.on("language-change", (updatedLanguage: string) => {
-      setLanguage(updatedLanguage)
+      setSelectedLanguage(updatedLanguage)
     })
+
 
     newSocket.on("chat-message", (message: ChatMessageType) => {
       setChatMessages((prev) => [...prev, { ...message, timestamp: new Date(message.timestamp) }])
@@ -162,7 +164,7 @@ export default function EditorPage() {
     if (activeTab === "preview") {
       updatePreview()
     }
-  }, [code, language, activeTab])
+  }, [code, selectedLanguage, activeTab])
 
   // Scroll to bottom of chat when messages change
   useEffect(() => {
@@ -191,9 +193,10 @@ export default function EditorPage() {
   }
 
   const handleLanguageChange = (value: string) => {
-    setLanguage(value)
-    socket?.emit("language-change", { roomId, language: value })
-  }
+  setSelectedLanguage(value)
+  socket?.emit("language-change", { roomId, language: value })
+}
+
 
   const handleLeaveRoom = () => {
     router.push("/")
@@ -228,14 +231,14 @@ export default function EditorPage() {
     const element = document.createElement("a")
     const file = new Blob([code], { type: "text/plain" })
     element.href = URL.createObjectURL(file)
-    element.download = `code.${language}`
+    element.download = `code.${selectedLanguage}`
     document.body.appendChild(element)
     element.click()
     document.body.removeChild(element)
 
     toast({
       title: "Downloaded!",
-      description: `File saved as code.${language}`,
+      description: `File saved as code.${selectedLanguage}`,
       duration: 2000,
     })
   }
@@ -301,12 +304,12 @@ export default function EditorPage() {
     if (!previewIframeRef.current) return
 
     // Only generate preview for web languages
-    if (["html", "javascript", "typescript", "css"].includes(language)) {
+    if (["html", "javascript", "typescript", "css"].includes(selectedLanguage)) {
       let previewContent = ""
 
-      if (language === "html") {
+      if (selectedLanguage === "html") {
         previewContent = code
-      } else if (language === "javascript" || language === "typescript") {
+      } else if (selectedLanguage === "javascript" || selectedLanguage === "typescript") {
         previewContent = `
           <!DOCTYPE html>
           <html>
@@ -369,7 +372,7 @@ export default function EditorPage() {
             </body>
           </html>
         `
-      } else if (language === "css") {
+      } else if (selectedLanguage === "css") {
         previewContent = `
           <!DOCTYPE html>
           <html>
@@ -537,14 +540,14 @@ export default function EditorPage() {
                   className="w-[200px] justify-between bg-zinc-900 border-zinc-700 hover:bg-zinc-800"
                   onClick={() => setLanguageSelectorOpen(!languageSelectorOpen)}
                 >
-                  {language ? languages.find((lang) => lang.value === language)?.label : "Select language..."}
+                  {selectedLanguage ? languages.find((lang) => lang.value === selectedLanguage)?.label : "Select language..."}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
                 {languageSelectorOpen && (
                   <LanguageSelector
-                    value={language}
-                    onValueChange={(value) => {
-                      handleLanguageChange(value)
+                    value={selectedLanguage}
+                    onValueChange={(newLang) => {
+                      setSelectedLanguage(newLang)
                       setLanguageSelectorOpen(false)
                     }}
                     open={languageSelectorOpen}
@@ -616,7 +619,7 @@ export default function EditorPage() {
                 <Editor
                   height="100%"
                   width="1250px"
-                  language={language}
+                  language={selectedLanguage}
                   value={code}
                   onChange={handleCodeChange}
                   theme={editorTheme}
@@ -672,7 +675,7 @@ export default function EditorPage() {
 
             {activeTab === "preview" && (
               <div className="h-full bg-zinc-900 p-4 overflow-auto">
-                {["html", "javascript", "typescript", "css"].includes(language) ? (
+                {["html", "javascript", "typescript", "css"].includes(selectedLanguage) ? (
                   <iframe
                     ref={previewIframeRef}
                     className="w-full h-full bg-white rounded border border-zinc-700"
@@ -682,7 +685,7 @@ export default function EditorPage() {
                 ) : (
                   <div className="text-center text-zinc-500 py-8">
                     <Globe className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>Preview not supported for {language}</p>
+                    <p>Preview not supported for {selectedLanguage}</p>
                     <p className="text-sm mt-2">Preview is only available for HTML, JavaScript, TypeScript, and CSS.</p>
                   </div>
                 )}

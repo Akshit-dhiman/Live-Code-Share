@@ -73,11 +73,13 @@ export function LanguageSelector({ value, onValueChange, open, onOpenChange }: L
           <CommandGroup className="max-h-[300px] overflow-auto">
             {languages.map((language) => (
               <CommandItem
-                key={language.value}
-                value={language.value}
-                onSelect={handleSelect}
-                className="cursor-pointer"
-              >
+                  key={language.value}
+                  value={language.value}
+                  onSelect={() => handleSelect(language.value)}
+                  className="cursor-pointer"
+                >
+
+
                 <Check
                   className={cn("mr-2 h-4 w-4", selectedLanguage === language.value ? "opacity-100" : "opacity-0")}
                 />
