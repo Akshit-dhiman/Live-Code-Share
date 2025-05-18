@@ -1,6 +1,9 @@
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import type { NextAuthOptions } from "next-auth"
+import { connectToDB } from "@/lib/db"
+import User from "@/models/user"
+import bcrypt from "bcryptjs"
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -11,22 +14,18 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        // In a real app, you would check the credentials against your database
-        if (!credentials?.email || !credentials?.password) {
-          return null
-        }
+  if (!credentials?.email || !credentials?.password) {
+    return null
+  }
 
-        // For demo purposes, we'll accept a specific email/password
-        if (credentials.email === "demo@example.com" && credentials.password === "password") {
-          return {
-            id: "1",
-            name: "Demo User",
-            email: "demo@example.com",
-          }
-        }
+  await connectToDB()
+  const user = await User.findOne({ email: credentials.email })
+  if (!user) return null
 
-        // Return null if user data could not be retrieved
-        return null
+  const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
+  if (!isPasswordValid) return null
+
+  return { id: user._id.toString(), name: user.name, email: user.email }
       },
     }),
   ],

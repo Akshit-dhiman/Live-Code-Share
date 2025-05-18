@@ -64,59 +64,66 @@ export default function SignupPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  e.preventDefault();
 
-    if (!validateForm()) {
-      return
-    }
-
-    setIsLoading(true)
-
-    try {
-      // In a real app, this would be an API call to your registration endpoint
-      // For demo purposes, we'll simulate a successful registration
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // Store user data in localStorage for demo purposes
-      // In a real app, this would be handled by your backend
-      const users = JSON.parse(localStorage.getItem("users") || "[]")
-      const newUser = { name, email, password }
-      users.push(newUser)
-      localStorage.setItem("users", JSON.stringify(users))
-
-      toast({
-        title: "Account created",
-        description: "Your account has been created successfully",
-      })
-
-      // Auto login after signup
-      const result = await signIn("credentials", {
-        redirect: false,
-        email,
-        password,
-      })
-
-      if (result?.error) {
-        toast({
-          title: "Login failed",
-          description: "Please log in with your new credentials",
-          variant: "destructive",
-        })
-        router.push("/login")
-      } else {
-        router.push("/")
-      }
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "An error occurred during registration. Please try again.",
-        variant: "destructive",
-      })
-      console.error(err)
-    } finally {
-      setIsLoading(false)
-    }
+  if (!validateForm()) {
+    return;
   }
+
+  setIsLoading(true);
+
+  try {
+    const res = await fetch("/api/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      toast({
+        title: "Signup failed",
+        description: data.error || "An error occurred",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    toast({
+      title: "Account created",
+      description: "Your account has been created successfully",
+    });
+
+    const result = await signIn("credentials", {
+      redirect: false,
+      email,
+      password,
+    });
+
+    if (result?.error) {
+      toast({
+        title: "Login failed",
+        description: "Please log in with your new credentials",
+        variant: "destructive",
+      });
+      router.push("/login");
+    } else {
+      router.push("/");
+    }
+  } catch (err) {
+    toast({
+      title: "Error",
+      description: "An error occurred during registration. Please try again.",
+      variant: "destructive",
+    });
+    console.error(err);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   if (status === "loading" || status === "authenticated") {
     return (
