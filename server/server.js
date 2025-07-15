@@ -11,7 +11,7 @@ const server = http.createServer(app)
 // const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(",") : ["http://localhost:3000"]
 const allowedOrigins = [
   "https://livecodeshare-olive.vercel.app",         // ✅ Your Vercel frontend
-  "https://radiant-balance.up.railway.app",
+  "https://live-code-share-production.up.railway.app",
   "https://live-code-share-f3p5.onrender.com",      // ✅ Your Render service (optional)
   "http://localhost:3000",                         // ✅ Local dev frontend
 ];
